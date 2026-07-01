@@ -34,6 +34,20 @@ npm install
 npm run dev                         # http://localhost:3000
 ```
 
+## Nomba webhook receiver
+
+The site ships a verified webhook endpoint at **`/api/webhooks/nomba`**
+(`website/app/api/webhooks/nomba/route.ts`). It checks the `nomba-signature`
+header (HMAC-SHA256 → base64 over Nomba's colon-delimited field string) before
+accepting an event, returns `200` on success and `401` on a bad signature, and a
+`GET` returns a health check. Configure via env:
+
+- `NOMBA_WEBHOOK_KEY` — the signing key (defaults to the hackathon key).
+- `ZAPIER_HOOK_URL` — optional; verified events are forwarded here for real-time Zaps.
+
+Once deployed, the URL to register with Nomba is
+`https://<your-domain>/api/webhooks/nomba`.
+
 ## Learn more
 
 - New here? Read [`integration/WHAT-IS-CHARON.md`](./integration/WHAT-IS-CHARON.md) —
