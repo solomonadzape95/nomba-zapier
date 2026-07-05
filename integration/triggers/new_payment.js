@@ -1,17 +1,72 @@
 'use strict';
 
-const { getBaseUrl, unwrap } = require('../constants');
+const { getBaseUrl, getHooksBase, unwrap } = require('../constants');
 
 // Trigger: New Payment Received.
 //
-// Implemented as a POLLING trigger against Nomba's transaction history — it works
-// in both sandbox and live and needs no webhook registration. Zapier dedupes on
-// the `id` field, so returning the most recent page each poll is correct.
+// REST HOOK with a polling fallback. Real-time delivery works like this:
+//   Nomba → (single webhook) → Charon website /api/webhooks/nomba (verifies the
+//   signature) → fans the event out to every Zap's `targetUrl` registered here.
+//
+// `performSubscribe`/`performUnsubscribe` register/unregister this Zap's hook URL
+// with the Charon hub. `perform` handles the delivered event. `performList` is the
+// polling path Zapier uses for the "test trigger" step and as a safety net — it
+// hits Nomba's transaction history directly, so the trigger still works even if
+// no webhook is configured on the Nomba dashboard.
 //
 // We surface inbound, successful transactions (money received): checkout payments
 // and virtual-account inflows. Outbound transfers are handled by new_transfer.
 
-const perform = async (z, bundle) => {
+const EVENT = 'payment';
+
+// Register this Zap's delivery URL with the Charon webhook hub (the website).
+const subscribe = async (z, bundle) => {
+  const response = await z.request({
+    url: `${getHooksBase()}/api/subscriptions`,
+    method: 'POST',
+    body: {
+      targetUrl: bundle.targetUrl,
+      event: EVENT,
+      accountId: bundle.authData.account_id,
+    },
+    // This call goes to Charon's own hub, not Nomba — don't attach the Nomba token.
+    skipHttpMiddleware: true,
+  });
+  return unwrap(response) || response.data;
+};
+
+// Remove this Zap's subscription when the Zap is turned off / deleted.
+const unsubscribe = async (z, bundle) => {
+  const id = bundle.subscribeData && bundle.subscribeData.id;
+  const response = await z.request({
+    url: `${getHooksBase()}/api/subscriptions/${id}`,
+    method: 'DELETE',
+    skipHttpMiddleware: true,
+  });
+  return unwrap(response) || response.data;
+};
+
+// Handle a real-time event delivered by the hub. The hub already normalises the
+// payload to the same shape performList returns, so downstream field mappings are
+// identical whether the Zap fired from a webhook or a poll.
+const perform = (z, bundle) => {
+  const p = bundle.cleanedRequest || {};
+  return [
+    {
+      ...p,
+      id: p.id || p.transactionId || p.merchantTxRef || p.orderReference,
+      amountValue:
+        p.amountValue != null
+          ? p.amountValue
+          : p.amount != null
+            ? Number(p.amount)
+            : undefined,
+    },
+  ];
+};
+
+// Polling fallback + "test trigger" source: pull recent inbound payments directly.
+const performList = async (z, bundle) => {
   const response = await z.request({
     url: `${getBaseUrl(bundle)}/v1/transactions/accounts`,
     method: 'GET',
@@ -55,12 +110,15 @@ module.exports = {
   display: {
     label: 'New Payment Received',
     description:
-      'Triggers when your Nomba account receives a successful payment (checkout or virtual-account inflow).',
+      'Triggers when your Nomba account receives a successful payment (checkout or virtual-account inflow). Real-time via webhook, with automatic polling fallback.',
   },
   operation: {
-    type: 'polling',
+    type: 'hook',
+    performSubscribe: subscribe,
+    performUnsubscribe: unsubscribe,
     perform,
-    // Sample used by Zapier to build downstream field mappings before a real poll.
+    performList,
+    // Sample used by Zapier to build downstream field mappings before a real event.
     sample: {
       id: 'TXN_123456789',
       status: 'SUCCESS',

@@ -12,6 +12,9 @@ const bankList = require('./triggers/bank_list');
 const sendTransfer = require('./creates/send_transfer');
 const createPaymentLink = require('./creates/create_payment_link');
 const buyAirtime = require('./creates/buy_airtime');
+const buyData = require('./creates/buy_data');
+const payElectricity = require('./creates/pay_electricity');
+const refundPayment = require('./creates/refund_payment');
 const createVirtualAccount = require('./creates/create_virtual_account');
 
 // Searches
@@ -37,6 +40,9 @@ const App = {
     [sendTransfer.key]: sendTransfer,
     [createPaymentLink.key]: createPaymentLink,
     [buyAirtime.key]: buyAirtime,
+    [buyData.key]: buyData,
+    [payElectricity.key]: payElectricity,
+    [refundPayment.key]: refundPayment,
     [createVirtualAccount.key]: createVirtualAccount,
   },
 

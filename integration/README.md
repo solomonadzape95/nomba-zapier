@@ -13,15 +13,19 @@ links from a form — without a developer.
 
 **Triggers** (start a Zap when something happens in Nomba)
 - **New Payment Received** — fires on each successful inbound payment (checkout or
-  virtual-account inflow). Polling-based, so it works in sandbox and live.
+  virtual-account inflow). **Real-time via webhook**, with automatic polling
+  fallback so it works even before a Nomba webhook is configured.
 - **New Transfer or Payout** — fires when an outbound transfer, payout or bill
-  payment completes.
+  payment completes. Same real-time-with-fallback delivery.
 
 **Actions** (do something in Nomba)
 - **Send Bank Transfer** — pay out to any Nigerian bank account, with optional
   automatic name verification first.
 - **Create Payment Link** — generate a hosted Nomba checkout link to send a customer.
 - **Buy Airtime** — top up a phone number (customer rewards, bulk airtime).
+- **Buy Data Bundle** — send a mobile data bundle to a phone number.
+- **Pay Electricity Bill** — pay a prepaid/postpaid bill; returns the prepaid vend token.
+- **Refund Payment** — refund a completed checkout payment (full or partial).
 - **Create Virtual Account** — issue a dedicated account number (one per customer/order).
 
 **Searches**
@@ -70,6 +74,9 @@ triggers/bank_list.js    Hidden trigger powering the bank dropdown
 creates/send_transfer.js          Send Bank Transfer (with name lookup)
 creates/create_payment_link.js    Create checkout payment link
 creates/buy_airtime.js            Buy airtime
+creates/buy_data.js               Buy mobile data bundle
+creates/pay_electricity.js        Pay electricity bill (prepaid/postpaid)
+creates/refund_payment.js         Refund a checkout payment
 creates/create_virtual_account.js Create dedicated virtual account
 searches/lookup_account.js        Bank account name enquiry
 searches/get_balance.js           Wallet balance
@@ -98,12 +105,30 @@ node_modules/.bin/zapier-platform push
 Then open Zapier, connect a Nomba account with your sandbox keys, and build the
 example Zaps above.
 
+## Real-time triggers (webhook, with polling fallback)
+
+Both triggers are Zapier **REST hooks**. Nomba only allows a single webhook URL, so
+the [Charon website](../website) is the one receiver: it verifies each event's
+signature (`/api/webhooks/nomba`) and fans it out to every subscribed Zap.
+
+- `performSubscribe` registers the Zap's delivery URL with the hub
+  (`POST {CHARON_HOOKS_URL}/api/subscriptions`); `performUnsubscribe` removes it.
+- The hub normalises each verified event to the **same shape** the polling path
+  emits, so downstream field mappings are identical either way.
+- `performList` still polls Nomba's transaction history — it powers the editor's
+  "test trigger" step and keeps the trigger working if no webhook is configured.
+
+Set the hub location for non-production with `zapier env:set CHARON_HOOKS_URL=...`
+(defaults to `https://paywithcharon.xyz`).
+
 ## Roadmap
 
-- REST-hook webhook variant of the payment trigger for instant delivery (currently polling)
-- **Buy Data Bundle** action (`/v1/bill/data`) and electricity/cable bill payments
-- **Refund Payment** and **Cancel Checkout** actions
+- **Cable/TV** bill payments (`/v1/bill/cabletv`) — route exists in sandbox; needs
+  the biller/package field set confirmed
+- **Cancel Checkout** action
 - Global Payout (cross-border) support
+- Shared/persistent subscription store on the hub (Vercel KV / Upstash) for
+  multi-instance production; currently an in-process registry (fine for the demo)
 
 ## Notes
 

@@ -1,13 +1,57 @@
 'use strict';
 
-const { getBaseUrl, unwrap } = require('../constants');
+const { getBaseUrl, getHooksBase, unwrap } = require('../constants');
 
 // Trigger: New Transfer/Payout Completed.
-// Polls transaction history for successful OUTBOUND money movement — bank
-// transfers, payouts and bill payments (airtime/data). Complements new_payment,
-// which covers inbound money.
+//
+// REST HOOK with a polling fallback (see new_payment.js for the full picture of how
+// the Charon website fans verified Nomba webhooks out to each Zap's targetUrl).
+// Covers successful OUTBOUND money movement — bank transfers, payouts and bill
+// payments (airtime/data/electricity). Complements new_payment (inbound money).
 
-const perform = async (z, bundle) => {
+const EVENT = 'transfer';
+
+const subscribe = async (z, bundle) => {
+  const response = await z.request({
+    url: `${getHooksBase()}/api/subscriptions`,
+    method: 'POST',
+    body: {
+      targetUrl: bundle.targetUrl,
+      event: EVENT,
+      accountId: bundle.authData.account_id,
+    },
+    skipHttpMiddleware: true,
+  });
+  return unwrap(response) || response.data;
+};
+
+const unsubscribe = async (z, bundle) => {
+  const id = bundle.subscribeData && bundle.subscribeData.id;
+  const response = await z.request({
+    url: `${getHooksBase()}/api/subscriptions/${id}`,
+    method: 'DELETE',
+    skipHttpMiddleware: true,
+  });
+  return unwrap(response) || response.data;
+};
+
+const perform = (z, bundle) => {
+  const p = bundle.cleanedRequest || {};
+  return [
+    {
+      ...p,
+      id: p.id || p.transactionId || p.merchantTxRef,
+      amountValue:
+        p.amountValue != null
+          ? p.amountValue
+          : p.amount != null
+            ? Number(p.amount)
+            : undefined,
+    },
+  ];
+};
+
+const performList = async (z, bundle) => {
   const response = await z.request({
     url: `${getBaseUrl(bundle)}/v1/transactions/accounts`,
     method: 'GET',
@@ -39,11 +83,14 @@ module.exports = {
   display: {
     label: 'New Transfer or Payout',
     description:
-      'Triggers when an outbound transfer, payout or bill payment completes successfully.',
+      'Triggers when an outbound transfer, payout or bill payment completes successfully. Real-time via webhook, with automatic polling fallback.',
   },
   operation: {
-    type: 'polling',
+    type: 'hook',
+    performSubscribe: subscribe,
+    performUnsubscribe: unsubscribe,
     perform,
+    performList,
     sample: {
       id: 'TRF_123456789',
       type: 'transfer',

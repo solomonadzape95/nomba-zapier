@@ -14,6 +14,13 @@ const getBaseUrl = (bundle) => {
   return BASE_URLS[env] || BASE_URLS.live;
 };
 
+// Base URL of the Charon webhook hub (the website). Nomba can only POST to a
+// single webhook URL, so the site receives every event, verifies its signature,
+// and fans it out to the per-Zap targetUrls registered by the REST-hook triggers.
+// Overridable via env for local/preview testing; defaults to production.
+const getHooksBase = () =>
+  (process.env.CHARON_HOOKS_URL || 'https://paywithcharon.xyz').replace(/\/$/, '');
+
 // Nomba wraps most responses as { code, description, data: {...} }.
 // Unwrap defensively so downstream code can rely on the payload shape.
 const unwrap = (response) => {
@@ -24,4 +31,4 @@ const unwrap = (response) => {
   return body;
 };
 
-module.exports = { BASE_URLS, getBaseUrl, unwrap };
+module.exports = { BASE_URLS, getBaseUrl, getHooksBase, unwrap };

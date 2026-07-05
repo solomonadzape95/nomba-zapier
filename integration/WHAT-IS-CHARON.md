@@ -127,7 +127,14 @@ Charon offers:
 - **Send Bank Transfer** — pay any Nigerian bank account (name verified first).
 - **Create Payment Link** — make a link a customer can pay through.
 - **Buy Airtime** — top up any phone number.
+- **Buy Data Bundle** — send a phone a data bundle.
+- **Pay Electricity Bill** — pay a prepaid/postpaid meter (gives back the prepaid token).
+- **Refund Payment** — send a customer's money back (all or part).
 - **Create Virtual Account** — hand a customer their own account number.
+
+> **Real-time now:** the two triggers deliver **instantly** through a verified
+> webhook (the website receives it, checks it's genuinely from Nomba, then wakes up
+> your Zap) — and quietly fall back to periodic checking if no webhook is set up.
 
 **Look-ups — quick answers you can use mid-automation:**
 - **Lookup Bank Account** — "whose account is this number?"

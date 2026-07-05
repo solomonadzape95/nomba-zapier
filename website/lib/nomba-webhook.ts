@@ -25,7 +25,21 @@ export type NombaWebhookPayload = {
       type?: string;
       time?: string;
       responseCode?: string;
+      // Fields below are not part of the signed string, but are used downstream
+      // to normalise the event into the shape Charon's triggers emit.
+      amount?: string | number;
+      currency?: string;
+      status?: string;
+      merchantTxRef?: string;
+      senderName?: string;
     };
+    order?: {
+      amount?: string | number;
+      currency?: string;
+      orderReference?: string;
+      customerEmail?: string;
+    };
+    customer?: { email?: string; name?: string };
   };
 };
 

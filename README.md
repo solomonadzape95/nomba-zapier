@@ -48,6 +48,22 @@ accepting an event, returns `200` on success and `401` on a bad signature, and a
 Once deployed, the URL to register with Nomba is
 `https://<your-domain>/api/webhooks/nomba`.
 
+### Real-time triggers (webhook fan-out)
+
+The site doubles as the **fan-out hub** for Charon's real-time Zapier triggers.
+Nomba only allows one webhook URL, so the site receives every event, verifies it,
+and forwards it to each subscribed Zap:
+
+- `POST /api/subscriptions` — a trigger's `performSubscribe` registers its delivery
+  URL (`{ targetUrl, event: "payment" | "transfer", accountId? }` → `{ id }`).
+- `DELETE /api/subscriptions/:id` — `performUnsubscribe` removes it.
+- On a verified event, `/api/webhooks/nomba` normalises it to the trigger's output
+  shape and POSTs it to every matching subscriber.
+
+The integration points at this hub via `CHARON_HOOKS_URL` (defaults to the
+production domain). The registry is in-process today — back it with Vercel KV /
+Upstash for multi-instance production.
+
 ## Learn more
 
 - New here? Read [`integration/WHAT-IS-CHARON.md`](./integration/WHAT-IS-CHARON.md) —

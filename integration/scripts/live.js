@@ -105,6 +105,43 @@ const baseAuth = {
     console.log('… create_virtual_account (may need BVN/config in sandbox):', e.message);
   }
 
+  // 10. Buy data bundle (create; spends a small sandbox amount)
+  try {
+    const data = await appTester(App.creates.buy_data.operation.perform, {
+      authData,
+      inputData: {
+        amount: 100,
+        phoneNumber: '08012345678',
+        network: 'MTN',
+        merchantTxRef: `LIVE-DATA-${Date.now()}`,
+      },
+    });
+    console.log('✓ buy_data:', JSON.stringify({ status: data.status, amount: data.amount }));
+  } catch (e) {
+    console.log('… buy_data:', e.message);
+  }
+
+  // 11. Pay electricity bill (create; returns a prepaid vend token)
+  try {
+    const elec = await appTester(App.creates.pay_electricity.operation.perform, {
+      authData,
+      inputData: {
+        amount: 1000,
+        customerId: '45700123456',
+        disco: 'IKEDC',
+        meterType: 'PREPAID',
+        merchantTxRef: `LIVE-ELEC-${Date.now()}`,
+        payerName: 'ACME Test Store',
+      },
+    });
+    console.log('✓ pay_electricity:', JSON.stringify({
+      status: elec.status,
+      token: elec.meta && elec.meta.phcnVendToken,
+    }));
+  } catch (e) {
+    console.log('… pay_electricity:', e.message);
+  }
+
   console.log('\nAll live checks passed against the Nomba sandbox.');
 })().catch((e) => {
   console.error('LIVE CHECK FAILED:', e.message);

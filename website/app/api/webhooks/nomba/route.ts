@@ -2,6 +2,8 @@ import {
   verifySignature,
   type NombaWebhookPayload,
 } from "@/lib/nomba-webhook";
+import { classifyEvent, normalizeEvent } from "@/lib/nomba-events";
+import { subscribersFor } from "@/lib/subscriptions";
 
 // node:crypto (HMAC) needs the Node.js runtime, and webhooks must never be cached.
 export const runtime = "nodejs";
@@ -41,7 +43,32 @@ export async function POST(req: Request) {
     `[nomba-webhook] ${payload.event_type ?? "unknown"} ${payload.requestId ?? ""}`
   );
 
-  // Optionally fan the event out to a Zapier Catch Hook for real-time triggers.
+  // Fan the verified event out to every Zap subscribed to this event kind. Each
+  // subscriber (registered via /api/subscriptions) gets the SAME normalised shape
+  // the polling trigger emits, so downstream Zap field mappings are identical.
+  const kind = classifyEvent(payload);
+  let delivered = 0;
+  if (kind) {
+    const merchantAccountId = payload.data?.merchant?.userId;
+    const subs = subscribersFor(kind, merchantAccountId);
+    if (subs.length) {
+      const normalized = normalizeEvent(payload);
+      const body = JSON.stringify(normalized);
+      const results = await Promise.allSettled(
+        subs.map((s) =>
+          fetch(s.targetUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body,
+          })
+        )
+      );
+      delivered = results.filter((r) => r.status === "fulfilled").length;
+    }
+  }
+
+  // Optionally also forward the raw event to a single Zapier "Catch Hook" — a
+  // no-subscription fallback that works before the native REST-hook triggers exist.
   if (FORWARD_URL) {
     try {
       await fetch(FORWARD_URL, {
@@ -55,7 +82,7 @@ export async function POST(req: Request) {
     }
   }
 
-  return Response.json({ received: true });
+  return Response.json({ received: true, event: kind, delivered });
 }
 
 /** GET is handy for a quick "is this URL live?" check when filling the form. */

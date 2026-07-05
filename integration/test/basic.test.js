@@ -4,10 +4,14 @@ require('should');
 const nock = require('nock');
 const zapier = require('zapier-platform-core');
 
+// Point the REST-hook triggers at a stub hub so subscribe/unsubscribe can be nocked.
+process.env.CHARON_HOOKS_URL = 'https://hub.test';
+
 const App = require('../index');
 const appTester = zapier.createAppTester(App);
 
 const BASE = 'https://api.nomba.com';
+const HUB = 'https://hub.test';
 
 const authData = {
   account_id: 'ACC_TEST',
@@ -84,7 +88,7 @@ describe('Nomba Zapier integration', () => {
       });
 
     const results = await appTester(
-      App.triggers.new_payment.operation.perform,
+      App.triggers.new_payment.operation.performList,
       { authData }
     );
 
@@ -203,7 +207,7 @@ describe('Nomba Zapier integration', () => {
         },
       });
 
-    const result = await appTester(App.triggers.new_transfer.operation.perform, { authData });
+    const result = await appTester(App.triggers.new_transfer.operation.performList, { authData });
     result.should.have.length(1);
     result[0].should.have.property('id', 'T1');
   });
@@ -214,8 +218,94 @@ describe('Nomba Zapier integration', () => {
       .query(true)
       .reply(400, { description: 'Insufficient permissions' });
 
-    await appTester(App.triggers.new_payment.operation.perform, { authData }).should.be.rejectedWith(
+    await appTester(App.triggers.new_payment.operation.performList, { authData }).should.be.rejectedWith(
       /Insufficient permissions/
     );
+  });
+
+  it('new_payment REST hook: subscribes, handles an event, and unsubscribes', async () => {
+    // performSubscribe registers this Zap's delivery URL with the Charon hub.
+    nock(HUB)
+      .post('/api/subscriptions', (b) => b.event === 'payment' && b.targetUrl === 'https://hooks.zapier.com/abc')
+      .reply(201, { id: 'sub_1' });
+
+    const sub = await appTester(App.triggers.new_payment.operation.performSubscribe, {
+      authData,
+      targetUrl: 'https://hooks.zapier.com/abc',
+    });
+    sub.should.have.property('id', 'sub_1');
+
+    // perform parses the delivered webhook body (no HTTP call).
+    const events = await appTester(App.triggers.new_payment.operation.perform, {
+      authData,
+      cleanedRequest: { id: 'TXN_9', type: 'online_checkout', amount: '750.00' },
+    });
+    events.should.have.length(1);
+    events[0].should.have.property('id', 'TXN_9');
+    events[0].should.have.property('amountValue', 750);
+
+    // performUnsubscribe removes the subscription when the Zap is turned off.
+    nock(HUB).delete('/api/subscriptions/sub_1').reply(200, { deleted: true });
+    const gone = await appTester(App.triggers.new_transfer.operation.performUnsubscribe, {
+      authData,
+      subscribeData: { id: 'sub_1' },
+    });
+    gone.should.have.property('deleted', true);
+  });
+
+  it('buys a data bundle', async () => {
+    nock(BASE)
+      .post('/v1/bill/data', (b) => b.network === 'MTN' && b.amount === 100 && b.merchantTxRef === 'DATA-1')
+      .reply(200, {
+        code: '00',
+        data: { status: 'SUCCESS', type: 'data', amount: 100, meta: { merchantTxRef: 'DATA-1' } },
+      });
+
+    const result = await appTester(App.creates.buy_data.operation.perform, {
+      authData,
+      inputData: { amount: 100, phoneNumber: '08012345678', network: 'MTN', merchantTxRef: 'DATA-1' },
+    });
+    result.should.have.property('status', 'SUCCESS');
+    result.should.have.property('type', 'data');
+  });
+
+  it('pays an electricity bill and returns the vend token', async () => {
+    nock(BASE)
+      .post('/v1/bill/electricity', (b) => b.disco === 'IKEDC' && b.meterType === 'PREPAID')
+      .reply(200, {
+        code: '00',
+        data: {
+          amount: 1000,
+          status: 'SUCCESS',
+          meta: { meterType: 'prepaid', phcnVendToken: '1234-5678', phcnVendUnits: '23.5' },
+        },
+      });
+
+    const result = await appTester(App.creates.pay_electricity.operation.perform, {
+      authData,
+      inputData: {
+        amount: 1000,
+        customerId: '45700123456',
+        disco: 'IKEDC',
+        meterType: 'PREPAID',
+        merchantTxRef: 'ELEC-1',
+        payerName: 'ACME Store',
+      },
+    });
+    result.should.have.property('status', 'SUCCESS');
+    result.meta.should.have.property('phcnVendToken', '1234-5678');
+  });
+
+  it('refunds a payment', async () => {
+    nock(BASE)
+      .post('/v1/checkout/refund', (b) => b.transactionId === 'TXN_9')
+      .reply(200, { code: '00', description: 'Refund Triggered', status: true });
+
+    const result = await appTester(App.creates.refund_payment.operation.perform, {
+      authData,
+      inputData: { transactionId: 'TXN_9' },
+    });
+    result.should.have.property('transactionId', 'TXN_9');
+    result.should.have.property('status');
   });
 });
