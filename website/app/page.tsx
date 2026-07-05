@@ -4,6 +4,9 @@ import {
   Send,
   Link2,
   Smartphone,
+  Wifi,
+  Zap,
+  Undo2,
   Landmark,
   Search,
   Wallet,
@@ -13,6 +16,9 @@ import {
   Infinity as InfinityIcon,
 } from "lucide-react";
 import { Marquee } from "@/components/Marquee";
+import { Logo } from "@/components/Logo";
+import { NombaMark } from "@/components/NombaMark";
+import { ZAPIER_INVITE } from "@/lib/links";
 
 const PROBLEMS = [
   {
@@ -86,6 +92,21 @@ const ACTIONS = [
     body: "Top up any phone number — perfect for customer rewards or staff allowances.",
   },
   {
+    icon: Wifi,
+    title: "Buy Data Bundle",
+    body: "Send a mobile data bundle to any number, straight from an automation.",
+  },
+  {
+    icon: Zap,
+    title: "Pay Electricity Bill",
+    body: "Pay a prepaid or postpaid bill and get the vend token back automatically.",
+  },
+  {
+    icon: Undo2,
+    title: "Refund Payment",
+    body: "Send a customer's money back — in full or in part — when an order is cancelled.",
+  },
+  {
     icon: Landmark,
     title: "Create Virtual Account",
     body: "Issue a dedicated bank account number — one per customer or per order.",
@@ -130,7 +151,7 @@ const RECIPES = [
 
 const STATS = [
   { value: "8,000+", label: "apps you can connect" },
-  { value: "8", label: "Nomba triggers & actions" },
+  { value: "11", label: "triggers, actions & searches" },
   { value: "0", label: "lines of code" },
   { value: "24/7", label: "always watching" },
 ];
@@ -158,11 +179,30 @@ export default function Home() {
           payment link without you lifting a finger. No code.
         </p>
         <div
-          className="mt-10 flex flex-wrap items-center gap-3 fade-up"
+          className="mt-8 flex items-center gap-3 fade-up"
+          style={{ animationDelay: "0.08s" }}
+        >
+          <span className="inline-flex items-center gap-2">
+            <Logo size={22} className="text-[var(--color-gold)]" />
+            <span className="font-display text-lg font-semibold text-coin">Charon</span>
+          </span>
+          <span className="text-utility text-[var(--color-muted)]">connects to</span>
+          <span className="inline-flex items-center gap-2">
+            <NombaMark size={18} className="text-[var(--color-ink)]" />
+            <span className="font-display text-lg font-semibold">Nomba</span>
+          </span>
+        </div>
+        <div
+          className="mt-8 flex flex-wrap items-center gap-3 fade-up"
           style={{ animationDelay: "0.1s" }}
         >
-          <a href="#get-started" className="btn-coin">
-            Get started <ArrowRight size={16} />
+          <a
+            href={ZAPIER_INVITE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-coin"
+          >
+            Add Nomba to Zapier <ArrowRight size={16} />
           </a>
           <a href="#how" className="btn-outline">
             See how it works
@@ -318,8 +358,13 @@ export default function Home() {
           Connect your Nomba account and build your first automation in minutes.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <a href="#" className="btn-coin">
-            Get started <ArrowRight size={16} />
+          <a
+            href={ZAPIER_INVITE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-coin"
+          >
+            Add Nomba to Zapier <ArrowRight size={16} />
           </a>
           <a href="#automate" className="btn-outline">
             Explore the building blocks

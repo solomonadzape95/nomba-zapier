@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ZAPIER_INVITE } from "@/lib/links";
 
 const LINKS = [
   { href: "#how", label: "How it works" },
@@ -31,9 +32,14 @@ export function TopBar() {
             </Link>
           ))}
           <ThemeToggle />
-          <Link href="#get-started" className="btn-coin">
-            Get started
-          </Link>
+          <a
+            href={ZAPIER_INVITE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-coin"
+          >
+            Add to Zapier
+          </a>
         </div>
       </nav>
     </header>

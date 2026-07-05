@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { NombaMark } from "@/components/NombaMark";
+import { ZAPIER_INVITE } from "@/lib/links";
 
 export function Footer() {
   return (
@@ -26,15 +28,24 @@ export function Footer() {
             <Link href="#recipes" className="text-[var(--color-muted)] hover:text-[var(--color-ink)]">
               Recipes
             </Link>
-            <Link href="#get-started" className="text-[var(--color-muted)] hover:text-[var(--color-ink)]">
-              Get started
-            </Link>
+            <a
+              href={ZAPIER_INVITE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+            >
+              Add to Zapier
+            </a>
           </div>
         </div>
         <div className="rule my-10" />
         <div className="flex flex-col items-start justify-between gap-3 text-utility text-[var(--color-muted)] sm:flex-row sm:items-center">
           <span>paywithcharon.xyz</span>
-          <span>Powered by Nomba · Runs on Zapier</span>
+          <span className="inline-flex items-center gap-1.5">
+            Powered by
+            <NombaMark size={13} className="text-[var(--color-ink)]" />
+            Nomba · Runs on Zapier
+          </span>
         </div>
       </div>
     </footer>
