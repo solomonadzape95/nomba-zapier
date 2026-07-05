@@ -1,0 +1,30 @@
+# Render Blueprint for the Charon webhook hub.
+#
+# Runs the Next.js site (website/) as a single always-on Node service, so the
+# in-process subscription registry stays consistent between "a Zap subscribes"
+# and "a Nomba webhook arrives" — the reason to host the hub here rather than on
+# serverless. The marketing site can stay on Vercel/paywithcharon.xyz; this
+# service just needs to be the target of CHARON_HOOKS_URL + the Nomba webhook.
+#
+# Deploy: Render Dashboard → New → Blueprint → pick this repo → Apply.
+services:
+  - type: web
+    name: charon-nomba-hub
+    runtime: node
+    rootDir: website
+    plan: starter # always-on (no free-tier spin-down, which would stall webhooks)
+    buildCommand: npm install && npm run build
+    startCommand: npm start # Next respects Render's $PORT and binds 0.0.0.0
+    healthCheckPath: /api/webhooks/nomba # GET returns 200 JSON health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Set this in the Render dashboard to match Nomba's signing key.
+      # If unset, the app falls back to the shared hackathon key.
+      - key: NOMBA_WEBHOOK_KEY
+        sync: false
+      # Optional: a single Zapier Catch Hook fallback (not needed once the
+      # native REST-hook triggers are subscribed).
+      - key: ZAPIER_HOOK_URL
+        sync: false

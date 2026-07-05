@@ -68,6 +68,9 @@ module.exports = {
     perform: getSessionKey,
   },
 
+  // Shown above the fields on the connection screen — one place to find all three.
+  connectionLabel: 'Nomba · {{bundle.authData.account_id}} ({{bundle.authData.environment}})',
+
   fields: [
     {
       key: 'account_id',
@@ -75,14 +78,16 @@ module.exports = {
       type: 'string',
       required: true,
       helpText:
-        'Your Nomba **parent Account ID** (Dashboard → Settings → API Keys).',
+        'All three values come from one place — your **Nomba Dashboard → Settings → ' +
+        'API Keys** (see the [Nomba API docs](https://developer.nomba.com/docs/api-basics/authentication)).\n\n' +
+        'Paste your **parent Account ID** here.',
     },
     {
       key: 'client_id',
       label: 'Client ID',
       type: 'string',
       required: true,
-      helpText: 'Your Nomba API **Client ID** (Dashboard → Settings → API Keys).',
+      helpText: 'Your API **Client ID** from **Settings → API Keys**.',
     },
     {
       key: 'client_secret',
@@ -90,21 +95,20 @@ module.exports = {
       type: 'password',
       required: true,
       helpText:
-        'Your Nomba API **Client Secret** (Dashboard → Settings → API Keys). Kept encrypted by Zapier.',
+        'Your API **Client Secret** from **Settings → API Keys**. Stored encrypted by Zapier.',
     },
     {
       key: 'environment',
       label: 'Environment',
       type: 'string',
-      required: false,
-      default: 'live',
+      required: true,
+      default: 'sandbox',
       choices: { live: 'Live', sandbox: 'Sandbox' },
-      helpText: 'Use **Sandbox** with test keys, **Live** with production keys.',
+      helpText:
+        'Pick **Sandbox** to try it with test keys (recommended first), or **Live** with production keys. ' +
+        'This must match the keys above.',
     },
   ],
 
   test,
-
-  // Shown on the connected-account label in the Zap editor.
-  connectionLabel: '{{bundle.authData.account_id}}',
 };
