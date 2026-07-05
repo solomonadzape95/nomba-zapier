@@ -87,7 +87,9 @@ module.exports = {
       label: 'Client ID',
       type: 'string',
       required: true,
-      helpText: 'Your API **Client ID** from **Settings → API Keys**.',
+      helpText:
+        'Your API **Client ID** from **Settings → API Keys** ' +
+        '([docs](https://developer.nomba.com/docs/api-basics/authentication)).',
     },
     {
       key: 'client_secret',
@@ -95,7 +97,8 @@ module.exports = {
       type: 'password',
       required: true,
       helpText:
-        'Your API **Client Secret** from **Settings → API Keys**. Stored encrypted by Zapier.',
+        'Your API **Client Secret** from **Settings → API Keys**, stored encrypted by Zapier ' +
+        '([docs](https://developer.nomba.com/docs/api-basics/authentication)).',
     },
     {
       key: 'environment',
@@ -105,8 +108,9 @@ module.exports = {
       default: 'sandbox',
       choices: { live: 'Live', sandbox: 'Sandbox' },
       helpText:
-        'Pick **Sandbox** to try it with test keys (recommended first), or **Live** with production keys. ' +
-        'This must match the keys above.',
+        'Pick **Sandbox** to try it with test keys (recommended first), or **Live** with production keys — ' +
+        'this must match the keys above ' +
+        '([docs](https://developer.nomba.com/docs/api-basics/authentication)).',
     },
   ],
 

@@ -127,7 +127,7 @@ const baseAuth = {
       authData,
       inputData: {
         amount: 1000,
-        customerId: '45700123456',
+        meterNumber: '45700123456',
         disco: 'IKEDC',
         meterType: 'PREPAID',
         merchantTxRef: `LIVE-ELEC-${Date.now()}`,

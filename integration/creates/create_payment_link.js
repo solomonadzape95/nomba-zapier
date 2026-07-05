@@ -18,7 +18,6 @@ const perform = async (z, bundle) => {
         currency: bundle.inputData.currency || 'NGN',
         orderReference: bundle.inputData.orderReference,
         customerEmail: bundle.inputData.customerEmail,
-        customerId: bundle.inputData.customerId,
         callbackUrl: bundle.inputData.callbackUrl,
         accountId: bundle.authData.account_id,
       },
@@ -63,12 +62,6 @@ module.exports = {
         type: 'string',
         required: false,
         helpText: 'Your unique reference for this order.',
-      },
-      {
-        key: 'customerId',
-        label: 'Customer ID',
-        type: 'string',
-        required: false,
       },
       {
         key: 'callbackUrl',

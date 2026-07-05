@@ -69,7 +69,7 @@ module.exports = {
     outputFields: [
       { key: 'status', label: 'Status' },
       { key: 'type', label: 'Type' },
-      { key: 'amount', label: 'Amount' },
+      { key: 'amount', label: 'Amount', type: 'number' },
       { key: 'meta__merchantTxRef', label: 'Reference' },
       { key: 'meta__rrn', label: 'RRN' },
     ],

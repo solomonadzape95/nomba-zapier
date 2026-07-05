@@ -285,7 +285,7 @@ describe('Nomba Zapier integration', () => {
       authData,
       inputData: {
         amount: 1000,
-        customerId: '45700123456',
+        meterNumber: '45700123456',
         disco: 'IKEDC',
         meterType: 'PREPAID',
         merchantTxRef: 'ELEC-1',

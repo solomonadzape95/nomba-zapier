@@ -25,6 +25,12 @@ const App = {
   version: require('./package.json').version,
   platformVersion: require('zapier-platform-core').version,
 
+  // Pass user input through untouched (no auto-trim/prune) for predictable
+  // requests to Nomba across all triggers, creates and searches.
+  flags: {
+    cleanInputData: false,
+  },
+
   authentication,
 
   beforeRequest: [...middleware.befores],

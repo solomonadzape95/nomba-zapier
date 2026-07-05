@@ -47,8 +47,11 @@ module.exports = {
         label: 'Transaction ID',
         type: 'string',
         required: true,
+        // Offer recent payments as a dropdown; users can still map a custom value
+        // (e.g. the ID from the trigger step in the same Zap).
+        dynamic: 'new_payment.id.amount',
         helpText:
-          'The ID of the payment to refund (from the New Payment Received trigger).',
+          'The payment to refund — pick a recent one, or map the ID from the New Payment Received trigger.',
       },
       {
         key: 'amount',

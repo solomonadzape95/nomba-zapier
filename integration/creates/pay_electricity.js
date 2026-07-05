@@ -15,7 +15,7 @@ const perform = async (z, bundle) => {
     method: 'POST',
     body: {
       amount: Number(bundle.inputData.amount),
-      customerId: bundle.inputData.customerId,
+      customerId: bundle.inputData.meterNumber,
       disco: bundle.inputData.disco,
       meterType: bundle.inputData.meterType,
       merchantTxRef: bundle.inputData.merchantTxRef,
@@ -38,7 +38,7 @@ module.exports = {
     inputFields: [
       { key: 'amount', label: 'Amount (NGN)', type: 'number', required: true },
       {
-        key: 'customerId',
+        key: 'meterNumber',
         label: 'Meter Number',
         type: 'string',
         required: true,
@@ -81,7 +81,7 @@ module.exports = {
     },
     outputFields: [
       { key: 'status', label: 'Status' },
-      { key: 'amount', label: 'Amount' },
+      { key: 'amount', label: 'Amount', type: 'number' },
       { key: 'meta__phcnVendToken', label: 'Vend Token' },
       { key: 'meta__phcnVendUnits', label: 'Units' },
       { key: 'meta__rrn', label: 'RRN' },
