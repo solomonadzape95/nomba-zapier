@@ -31,4 +31,10 @@ const unwrap = (response) => {
   return body;
 };
 
-module.exports = { BASE_URLS, getBaseUrl, getHooksBase, unwrap };
+// Nomba requires a non-blank merchantTxRef on transfers and bill payments. When a
+// user leaves the Reference field empty, generate a unique fallback so the action
+// still succeeds (and stays reconcilable) instead of failing with a 422.
+const makeRef = (prefix = 'charon') =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+module.exports = { BASE_URLS, getBaseUrl, getHooksBase, unwrap, makeRef };

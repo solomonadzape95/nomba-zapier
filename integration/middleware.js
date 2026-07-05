@@ -35,8 +35,12 @@ const handleApiError = (response, z) => {
     let message = `Nomba API error (HTTP ${response.status}).`;
     try {
       const body = response.json || JSON.parse(response.content || '{}');
+      // Nomba reports validation failures in different shapes: a `description`
+      // string, a `message`/`error`, or an `errors` array (e.g. 422s).
+      const fromErrors = Array.isArray(body.errors) ? body.errors.join(', ') : null;
       message =
-        (body && (body.description || body.message || body.error)) || message;
+        (body && (body.description || body.message || body.error || fromErrors)) ||
+        message;
     } catch (e) {
       // non-JSON body; keep the default message
     }

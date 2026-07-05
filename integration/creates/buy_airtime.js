@@ -1,6 +1,6 @@
 'use strict';
 
-const { getBaseUrl, unwrap } = require('../constants');
+const { getBaseUrl, unwrap, makeRef } = require('../constants');
 
 // Create: Buy Airtime.
 // Tops up a phone number — powers "reward the customer" / bulk airtime workflows.
@@ -16,7 +16,7 @@ const perform = async (z, bundle) => {
       amount: Number(bundle.inputData.amount),
       phoneNumber: bundle.inputData.phoneNumber,
       network: bundle.inputData.network,
-      merchantTxRef: bundle.inputData.merchantTxRef,
+      merchantTxRef: bundle.inputData.merchantTxRef || makeRef('charon-air'),
       senderName: bundle.inputData.senderName,
     },
   });

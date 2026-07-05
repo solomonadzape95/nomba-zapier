@@ -1,6 +1,6 @@
 'use strict';
 
-const { getBaseUrl, unwrap } = require('../constants');
+const { getBaseUrl, unwrap, makeRef } = require('../constants');
 
 // Create: Send Bank Transfer (payout).
 //
@@ -38,13 +38,18 @@ const perform = async (z, bundle) => {
       accountName,
       bankCode: bundle.inputData.bankCode,
       narration: bundle.inputData.narration,
-      // merchantTxRef makes the transfer idempotent / reconcilable.
-      merchantTxRef: bundle.inputData.merchantTxRef,
+      // Nomba requires merchantTxRef; auto-generate one if the user left it blank.
+      merchantTxRef: bundle.inputData.merchantTxRef || makeRef('charon-tr'),
       senderName: bundle.inputData.senderName,
     },
   });
 
-  return unwrap(response) || {};
+  const data = unwrap(response) || {};
+  // Surface the resolved bank name (Nomba returns it under meta) at the top level.
+  if (data.meta && data.meta.bankName && !data.bankName) {
+    data.bankName = data.meta.bankName;
+  }
+  return data;
 };
 
 module.exports = {
@@ -100,7 +105,7 @@ module.exports = {
         type: 'string',
         required: false,
         helpText:
-          'Your unique reference for this transfer (used for idempotency and reconciliation).',
+          'Your unique reference for this transfer (for reconciliation). Auto-generated if left blank.',
       },
       {
         key: 'senderName',
@@ -123,6 +128,8 @@ module.exports = {
       { key: 'status', label: 'Status' },
       { key: 'amount', label: 'Amount', type: 'number' },
       { key: 'accountName', label: 'Account Name' },
+      { key: 'bankName', label: 'Bank Name' },
+      { key: 'meta__sender_name', label: 'Sender Name' },
       { key: 'merchantTxRef', label: 'Reference' },
     ],
   },
